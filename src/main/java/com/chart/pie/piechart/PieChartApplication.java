@@ -15,6 +15,7 @@ public class PieChartApplication extends Application {
     public void start(Stage stage) throws IOException {
         FXMLLoader fxmlLoader = new FXMLLoader(PieChartApplication.class.getResource("PieChartLayout.fxml"));
         Scene scene = new Scene(fxmlLoader.load());
+//        scene.getStylesheets().add(getClass().getResource("styles.css").toString());
         stage.setScene(scene);
         stage.show();
     }

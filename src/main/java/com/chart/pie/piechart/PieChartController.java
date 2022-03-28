@@ -5,8 +5,13 @@ import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.embed.swing.SwingFXUtils;
+import javafx.event.Event;
+import javafx.event.EventHandler;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
 import javafx.geometry.Rectangle2D;
+import javafx.scene.Node;
+import javafx.scene.Scene;
 import javafx.scene.SnapshotParameters;
 import javafx.scene.chart.PieChart;
 import javafx.scene.control.*;
@@ -15,7 +20,13 @@ import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.control.cell.TextFieldTableCell;
 import javafx.scene.image.WritableImage;
 import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.Region;
+import javafx.scene.layout.VBox;
+import javafx.scene.paint.Color;
 import javafx.stage.FileChooser;
+import javafx.stage.Modality;
+import javafx.stage.Stage;
+import javafx.stage.StageStyle;
 import javafx.util.converter.IntegerStringConverter;
 
 import javax.imageio.ImageIO;
@@ -23,6 +34,7 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+
 
 public class PieChartController {
 
@@ -34,7 +46,11 @@ public class PieChartController {
     private PieChart pieChart;
     @FXML
     private TableView dataTable;
+    @FXML
+    private TextField chartTitle;
     private int selectedTableRow;
+    @FXML
+    private ColorPicker colorpicker;
 
     /**
      * The following fields are Observable fields that hold the data passed to TableView and PieChart.
@@ -46,40 +62,57 @@ public class PieChartController {
 
 
     /**
-     * The follwoing initializes the fields add ListChangeListener for the dataForTableViewList and creates the
+     * The following initializes the fields add ListChangeListener for the dataForTableViewList and creates the
      * dataTable TableView with the required columns.
      */
     public void initialize() {
         dataForPieChart = FXCollections.observableArrayList();
         pieChart.setData(dataForPieChart);
+        pieChart.titleProperty().bind(chartTitle.textProperty());
+
+        pieChart.addEventHandler(MouseEvent.MOUSE_CLICKED,
+                new EventHandler<MouseEvent>() {
+                    @Override
+                    public void handle(MouseEvent e) {
+                        if(e.getPickResult().getIntersectedNode().toString().startsWith("Region")){
+                            colorpicker.show();
+                            colorpicker.setOnAction(new EventHandler() {
+                                public void handle(Event t) {
+                                    String color = colorpicker.getValue().toString().substring(2,8).toUpperCase();
+                                    e.getPickResult().getIntersectedNode().setStyle("-fx-pie-color:#" + color + ";");
+                                }
+                            });
+                        }
+                    }
+                });
 
         dataTable.setEditable(true);
         dataForTableView = FXCollections.observableArrayList(chartData -> new Observable[]{chartData.checkedProperty()});
         dataForTableView.addListener((ListChangeListener<ChartData>) c -> {
             while (c.next()) {
-                for(var a: c.getAddedSubList()){
+                for (var a : c.getAddedSubList()) {
                     /** add the data to dataForPieChartList when added into the dataForTableView */
                     dataForPieChart.add(new PieChart.Data(a.getCategory(), a.getValue()));
                 }
                 /** Check if the data is changed inside the table view or the checkbox state is changed */
                 if (c.wasUpdated()) {
-                    int start = c.getFrom() ;
-                    int end = c.getTo() ;
+                    int start = c.getFrom();
+                    int end = c.getTo();
                     /** loop through the changed data */
-                    for (int i = start ; i < end ; i++) {
+                    for (int i = start; i < end; i++) {
                         /** if the state of the checkbox is changed to false */
-                        if(!c.getList().get(i).getShow()){
+                        if (!c.getList().get(i).getShow()) {
                             /** get category of the data */
                             String catToRemove = c.getList().get(i).getCategory();
                             /** loop through the dataForPieChart list and remove that category from chart */
-                            for(int j = 0; j < dataForPieChart.size(); j++){
-                                if(dataForPieChart.get(j).getName().equals(catToRemove)){
+                            for (int j = 0; j < dataForPieChart.size(); j++) {
+                                if (dataForPieChart.get(j).getName().equals(catToRemove)) {
                                     dataForPieChart.remove(j);
                                 }
                             }
                             /** if state of the checkbox changed from false to true then get the data and add to the
                              * dataForPieChart list. */
-                        }else {
+                        } else {
                             dataForPieChart.add(new PieChart.Data(c.getList().get(i).getCategory(), c.getList().get(i).getValue()));
                         }
                     }
@@ -110,8 +143,9 @@ public class PieChartController {
         dataTable.setItems(dataForTableView);
     }
 
-    /** The following method gets the data from user input (category and value text fields)
-     * and checks if the data is redundant fires an alert and if the data is not redundant
+    /**
+     * The following method gets the data from user input (category and value text fields)
+     * and if the data is redundant it fires an alert and if the data is not redundant
      * it adds the data into dataForTableView list
      */
     @FXML
@@ -119,18 +153,18 @@ public class PieChartController {
         String category = this.category.getText();
         Integer value = Integer.parseInt(this.value.getText());
         ArrayList<ChartData> toAdd = new ArrayList<>();
-        if(dataForTableView.size() > 0 && dataForPieChart.size() > 0){
-            for(var item: dataForTableView){
-                if(item.getCategory().equals(category)){
+        if (dataForTableView.size() > 0 && dataForPieChart.size() > 0) {
+            for (var item : dataForTableView) {
+                if (item.getCategory().equals(category)) {
                     alert();
                     toAdd.clear();
                     break;
-                }else{
+                } else {
                     toAdd.clear();
                     toAdd.add(new ChartData(category, value, true));
                 }
             }
-        }else if(dataForTableView.size() == 0){
+        } else if (dataForTableView.size() == 0) {
             dataForTableView.add(new ChartData(category, value, true));
         }
         dataForTableView.addAll(toAdd);
@@ -157,6 +191,7 @@ public class PieChartController {
 
     /**
      * choose a directory to save the file into.
+     *
      * @return returns the directory path and name.
      */
     public File selectDirAndFileName() {
@@ -179,6 +214,7 @@ public class PieChartController {
 
     /**
      * The following table listener gets the row index of the tableview.
+     *
      * @param event
      */
     @FXML

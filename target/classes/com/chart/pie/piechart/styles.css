@@ -1,1 +1,16 @@
 
+.data0.chart-pie { -fx-pie-color: turquoise; }
+.data1.chart-pie { -fx-pie-color: aquamarine; }
+.data2.chart-pie { -fx-pie-color: cornflowerblue; }
+.data3.chart-pie { -fx-pie-color: blue; }
+.data4.chart-pie { -fx-pie-color: cadetblue; }
+.data5.chart-pie { -fx-pie-color: navy; }
+.data6.chart-pie { -fx-pie-color: deepskyblue; }
+.data7.chart-pie { -fx-pie-color: cyan; }
+.data8.chart-pie { -fx-pie-color: steelblue; }
+.data9.chart-pie { -fx-pie-color: teal; }
+.data10.chart-pie { -fx-pie-color: royalblue; }
+.data11.chart-pie { -fx-pie-color: dodgerblue; }
+
+/* Pie Chart legend background color and stroke. */
+.chart-legend { -fx-background-color: sienna; }
